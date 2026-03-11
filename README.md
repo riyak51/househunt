@@ -1,3 +1,4 @@
+
 # 🏠 HouseHunt – Smart House Suggestion System
 
 A complete full-stack web application for house rental listings built with HTML, CSS, JavaScript, Node.js, Express.js, and MySQL.
@@ -110,8 +111,8 @@ cp .env.example .env
 ```
 DB_HOST=localhost
 DB_USER=root
-DB_PASSWORD=your_mysql_password_here
-DB_NAME=househunt
+DB_PASSWORD=vit@123$
+DB_NAME=househunt_db
 JWT_SECRET=mySecretKeyForHouseHunt2024
 PORT=5000
 ```
@@ -303,3 +304,7 @@ const BASE_URL = 'https://your-render-url.onrender.com/api';
 ---
 
 *Built for BTech IT Project — HouseHunt Smart House Suggestion System*
+=======
+# househunt
+HouseHunt - Smart House Suggestion System 
+
