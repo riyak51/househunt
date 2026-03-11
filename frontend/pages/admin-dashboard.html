@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard – HouseHunt</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<div class="admin-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="admin-sidebar">
+    <div class="brand">🏠 House<span>Hunt</span><br><small style="font-size:0.7rem;opacity:0.7">Admin Panel</small></div>
+    <ul class="sidebar-nav">
+      <li><a href="#" class="active" onclick="showTab('dashboard')">📊 Dashboard</a></li>
+      <li><a href="#" onclick="showTab('houses')">🏠 Houses</a></li>
+      <li><a href="#" onclick="showTab('users')">👥 Users</a></li>
+      <li><a href="#" onclick="showTab('bookings')">📋 Bookings</a></li>
+      <li><a href="#" onclick="logout()" style="margin-top:auto;border-top:1px solid rgba(255,255,255,0.1)">🚪 Logout</a></li>
+    </ul>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="admin-main">
+
+    <!-- DASHBOARD TAB -->
+    <div id="tab-dashboard">
+      <div class="admin-header"><h2>Dashboard Overview</h2></div>
+      <div class="stats-cards">
+        <div class="stat-card"><div class="stat-icon">🏠</div><div class="stat-num" id="countHouses">-</div><div class="stat-label">Total Houses</div></div>
+        <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-num" id="countUsers">-</div><div class="stat-label">Registered Users</div></div>
+        <div class="stat-card"><div class="stat-icon">📋</div><div class="stat-num" id="countBookings">-</div><div class="stat-label">Booking Requests</div></div>
+        <div class="stat-card"><div class="stat-icon">✅</div><div class="stat-num" id="countAvail">-</div><div class="stat-label">Available Listings</div></div>
+      </div>
+      <div class="table-container">
+        <div class="table-header"><h3>Recent Houses</h3></div>
+        <table><thead><tr><th>Title</th><th>City</th><th>Price</th><th>Type</th><th>Status</th></tr></thead>
+        <tbody id="recentHouses"></tbody></table>
+      </div>
+    </div>
+
+    <!-- HOUSES TAB -->
+    <div id="tab-houses" style="display:none">
+      <div class="admin-header">
+        <h2>Manage Houses</h2>
+        <button class="btn btn-accent" onclick="openAddModal()">+ Add New House</button>
+      </div>
+      <div class="table-container">
+        <table><thead><tr><th>ID</th><th>Title</th><th>City</th><th>Price</th><th>Type</th><th>Available</th><th>Actions</th></tr></thead>
+        <tbody id="housesTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- USERS TAB -->
+    <div id="tab-users" style="display:none">
+      <div class="admin-header"><h2>Registered Users</h2></div>
+      <div class="table-container">
+        <table><thead><tr><th>ID</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th></tr></thead>
+        <tbody id="usersTable"></tbody></table>
+      </div>
+    </div>
+
+    <!-- BOOKINGS TAB -->
+    <div id="tab-bookings" style="display:none">
+      <div class="admin-header"><h2>Booking Requests</h2></div>
+      <div class="table-container">
+        <table><thead><tr><th>ID</th><th>User</th><th>House</th><th>City</th><th>Message</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="bookingsTable"></tbody></table>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ADD/EDIT HOUSE MODAL -->
+<div class="modal-overlay" id="houseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Add New House</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalAlert" class="alert" style="display:none;"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+      <div class="form-group" style="grid-column:1/-1"><label>Title *</label><input id="hTitle" placeholder="e.g. Modern 2BHK Apartment"></div>
+      <div class="form-group"><label>City *</label><input id="hCity" placeholder="e.g. Pune"></div>
+      <div class="form-group"><label>Location *</label><input id="hLocation" placeholder="e.g. Koregaon Park"></div>
+      <div class="form-group"><label>Price (₹/month) *</label><input id="hPrice" type="number" placeholder="18000"></div>
+      <div class="form-group"><label>Bedrooms *</label><input id="hBeds" type="number" placeholder="2"></div>
+      <div class="form-group"><label>Bathrooms</label><input id="hBaths" type="number" placeholder="2"></div>
+      <div class="form-group"><label>Area (sqft)</label><input id="hArea" type="number" placeholder="950"></div>
+      <div class="form-group"><label>House Type</label>
+        <select id="hType"><option>Apartment</option><option>Villa</option><option>Studio</option><option>Independent House</option></select>
+      </div>
+      <div class="form-group"><label>Furnished Status</label>
+        <select id="hFurnished"><option>Furnished</option><option>Semi-Furnished</option><option>Unfurnished</option></select>
+      </div>
+      <div class="form-group"><label>Owner Name</label><input id="hOwnerName" placeholder="Owner's name"></div>
+      <div class="form-group"><label>Owner Phone</label><input id="hOwnerPhone" placeholder="Owner's phone"></div>
+      <div class="form-group"><label>Owner Email</label><input id="hOwnerEmail" placeholder="Owner's email"></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Image URL</label><input id="hImg" placeholder="https://...image url..."></div>
+      <div class="form-group" style="grid-column:1/-1"><label>Description</label><textarea id="hDesc" rows="3" placeholder="Describe the property..."></textarea></div>
+    </div>
+    <div style="display:flex;gap:12px;margin-top:10px">
+      <button class="btn btn-primary" style="flex:1" onclick="saveHouse()">Save House</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script>
+  // Guard: redirect to login if not admin
+  if (!isLoggedIn() || !isAdmin()) window.location.href = 'admin-login.html';
+
+  let editingId = null;
+  let allHouses = [];
+
+  function showTab(name) {
+    ['dashboard','houses','users','bookings'].forEach(t => {
+      document.getElementById('tab-' + t).style.display = t === name ? 'block' : 'none';
+    });
+    document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+    if (name === 'dashboard') loadDashboard();
+    else if (name === 'houses') loadHousesTable();
+    else if (name === 'users') loadUsers();
+    else if (name === 'bookings') loadBookings();
+  }
+
+  async function loadDashboard() {
+    try {
+      const [housesData, usersData, bookingsData] = await Promise.all([
+        Houses.getAll(), Admin.getUsers(), Admin.getBookings()
+      ]);
+      allHouses = housesData.houses;
+      document.getElementById('countHouses').textContent = housesData.count;
+      document.getElementById('countUsers').textContent = usersData.count;
+      document.getElementById('countBookings').textContent = bookingsData.bookings.length;
+      document.getElementById('countAvail').textContent = housesData.houses.filter(h => h.available).length;
+
+      document.getElementById('recentHouses').innerHTML = housesData.houses.slice(0, 5).map(h => `
+        <tr>
+          <td>${h.title}</td>
+          <td>${h.city}</td>
+          <td>${formatPrice(h.price)}</td>
+          <td>${h.house_type}</td>
+          <td><span class="badge ${h.available ? 'badge-available' : 'badge-unfurnished'}">${h.available ? 'Available' : 'Booked'}</span></td>
+        </tr>`).join('');
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function loadHousesTable() {
+    try {
+      const data = await Houses.getAll();
+      allHouses = data.houses;
+      document.getElementById('housesTable').innerHTML = data.houses.map(h => `
+        <tr>
+          <td>#${h.id}</td>
+          <td>${h.title}</td>
+          <td>${h.city}</td>
+          <td>${formatPrice(h.price)}</td>
+          <td>${h.house_type}</td>
+          <td><span class="badge ${h.available ? 'badge-available' : 'badge-unfurnished'}">${h.available ? 'Yes' : 'No'}</span></td>
+          <td class="action-btns">
+            <button class="btn btn-primary btn-sm" onclick="openEditModal(${h.id})">✏️ Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteHouse(${h.id})">🗑 Delete</button>
+          </td>
+        </tr>`).join('');
+    } catch (e) {
+      document.getElementById('housesTable').innerHTML = '<tr><td colspan="7">Error loading data</td></tr>';
+    }
+  }
+
+  async function loadUsers() {
+    try {
+      const data = await Admin.getUsers();
+      document.getElementById('usersTable').innerHTML = data.users.map(u => `
+        <tr>
+          <td>#${u.id}</td>
+          <td>${u.name}</td>
+          <td>${u.email}</td>
+          <td>${u.phone || '—'}</td>
+          <td>${new Date(u.created_at).toLocaleDateString()}</td>
+        </tr>`).join('');
+    } catch (e) {
+      document.getElementById('usersTable').innerHTML = '<tr><td colspan="5">Error loading users</td></tr>';
+    }
+  }
+
+  async function loadBookings() {
+    try {
+      const data = await Admin.getBookings();
+      document.getElementById('bookingsTable').innerHTML = data.bookings.map(b => `
+        <tr>
+          <td>#${b.id}</td>
+          <td>${b.user_name}</td>
+          <td>${b.house_title}</td>
+          <td>${b.city}</td>
+          <td>${b.message || '—'}</td>
+          <td><span class="badge ${b.status === 'Confirmed' ? 'badge-available' : b.status === 'Rejected' ? 'badge-unfurnished' : 'badge-semi'}">${b.status}</span></td>
+          <td>${new Date(b.created_at).toLocaleDateString()}</td>
+        </tr>`).join('');
+    } catch (e) {
+      document.getElementById('bookingsTable').innerHTML = '<tr><td colspan="7">Error loading bookings</td></tr>';
+    }
+  }
+
+  function openAddModal() {
+    editingId = null;
+    document.getElementById('modalTitle').textContent = 'Add New House';
+    ['hTitle','hCity','hLocation','hPrice','hBeds','hBaths','hArea','hOwnerName','hOwnerPhone','hOwnerEmail','hImg','hDesc']
+      .forEach(id => document.getElementById(id).value = '');
+    document.getElementById('houseModal').classList.add('open');
+  }
+
+  function openEditModal(id) {
+    const house = allHouses.find(h => h.id === id);
+    if (!house) return;
+    editingId = id;
+    document.getElementById('modalTitle').textContent = 'Edit House';
+    document.getElementById('hTitle').value = house.title || '';
+    document.getElementById('hCity').value = house.city || '';
+    document.getElementById('hLocation').value = house.location || '';
+    document.getElementById('hPrice').value = house.price || '';
+    document.getElementById('hBeds').value = house.bedrooms || '';
+    document.getElementById('hBaths').value = house.bathrooms || '';
+    document.getElementById('hArea').value = house.area_sqft || '';
+    document.getElementById('hType').value = house.house_type || 'Apartment';
+    document.getElementById('hFurnished').value = house.furnished || 'Unfurnished';
+    document.getElementById('hOwnerName').value = house.owner_name || '';
+    document.getElementById('hOwnerPhone').value = house.owner_phone || '';
+    document.getElementById('hOwnerEmail').value = house.owner_email || '';
+    document.getElementById('hImg').value = house.image_url || '';
+    document.getElementById('hDesc').value = house.description || '';
+    document.getElementById('houseModal').classList.add('open');
+  }
+
+  function closeModal() { document.getElementById('houseModal').classList.remove('open'); }
+
+  async function saveHouse() {
+    const data = {
+      title: document.getElementById('hTitle').value,
+      city: document.getElementById('hCity').value,
+      location: document.getElementById('hLocation').value,
+      price: document.getElementById('hPrice').value,
+      bedrooms: document.getElementById('hBeds').value,
+      bathrooms: document.getElementById('hBaths').value,
+      area_sqft: document.getElementById('hArea').value,
+      house_type: document.getElementById('hType').value,
+      furnished: document.getElementById('hFurnished').value,
+      owner_name: document.getElementById('hOwnerName').value,
+      owner_phone: document.getElementById('hOwnerPhone').value,
+      owner_email: document.getElementById('hOwnerEmail').value,
+      image_url: document.getElementById('hImg').value,
+      description: document.getElementById('hDesc').value,
+      available: true
+    };
+
+    try {
+      if (editingId) {
+        await Houses.update(editingId, data);
+        showAlert('modalAlert', '✅ House updated!', 'success');
+      } else {
+        await Houses.add(data);
+        showAlert('modalAlert', '✅ House added!', 'success');
+      }
+      setTimeout(() => { closeModal(); loadHousesTable(); }, 1500);
+    } catch (err) {
+      showAlert('modalAlert', err.message || 'Failed to save house.');
+    }
+  }
+
+  async function deleteHouse(id) {
+    if (!confirm('Are you sure you want to delete this house?')) return;
+    try {
+      await Houses.delete(id);
+      loadHousesTable();
+    } catch (err) {
+      alert('Failed to delete: ' + err.message);
+    }
+  }
+
+  // Load dashboard on start
+  loadDashboard();
+</script>
+</body>
+</html>

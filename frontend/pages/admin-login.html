@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Login – HouseHunt</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body style="background:var(--primary)">
+<div class="form-container" style="margin-top:80px">
+  <div class="form-title">
+    <h2>🔐 Admin Panel</h2>
+    <p>Login to manage HouseHunt listings</p>
+  </div>
+  <div id="alertBox" class="alert" style="display:none;"></div>
+  <div class="form-group">
+    <label>Admin Email</label>
+    <input type="email" id="email" placeholder="admin@househunt.com">
+  </div>
+  <div class="form-group">
+    <label>Password</label>
+    <input type="password" id="password" placeholder="Enter admin password">
+  </div>
+  <button class="form-submit" onclick="adminLogin()">Login as Admin</button>
+  <p class="form-link"><a href="../index.html">← Back to Website</a></p>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script>
+  async function adminLogin() {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+    if (!email || !password) return showAlert('alertBox', 'Please fill all fields');
+    try {
+      const data = await Auth.adminLogin({ email, password });
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('user', JSON.stringify({ ...data.admin, role: 'admin' }));
+      showAlert('alertBox', '✅ Login successful! Redirecting...', 'success');
+      setTimeout(() => window.location.href = 'admin-dashboard.html', 1500);
+    } catch (err) {
+      showAlert('alertBox', err.message || 'Login failed. Check credentials.');
+    }
+  }
+  document.addEventListener('keypress', e => { if (e.key === 'Enter') adminLogin(); });
+</script>
+</body>
+</html>

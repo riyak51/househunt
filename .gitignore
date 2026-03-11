@@ -1,0 +1,9 @@
+# Node modules (never push this to GitHub)
+node_modules/
+
+# Environment variables (keep your passwords secret!)
+.env
+
+# OS files
+.DS_Store
+Thumbs.db

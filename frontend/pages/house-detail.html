@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Details – HouseHunt</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="../index.html" class="logo">🏠 House<span>Hunt</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="listings.html">Browse Houses</a></li>
+    <ul id="authLinks" style="display:contents;list-style:none;">
+      <li><a href="login.html" class="nav-btn outline">Login</a></li>
+      <li><a href="register.html" class="nav-btn">Register</a></li>
+    </ul>
+  </ul>
+</nav>
+
+<div id="loading" class="loading" style="margin-top:60px">⏳ Loading property details...</div>
+<div id="content" style="display:none">
+  <div class="detail-layout">
+    <div>
+      <img class="detail-img" id="detailImg" src="" alt="House Image">
+      <div style="margin-top:20px">
+        <h2 style="font-size:1.2rem;color:var(--primary);margin-bottom:12px;font-family:'DM Sans',sans-serif;font-weight:600">About this Property</h2>
+        <p id="detailDesc" style="color:var(--text-mid);line-height:1.8"></p>
+      </div>
+    </div>
+
+    <div>
+      <div style="margin-bottom:24px">
+        <div class="detail-price" id="detailPrice"></div>
+        <h1 class="detail-info" id="detailTitle" style="font-size:1.5rem;color:var(--primary);margin-bottom:8px"></h1>
+        <p style="color:var(--text-mid);font-size:0.9rem">📍 <span id="detailLocation"></span></p>
+        <div class="detail-badges" id="detailBadges" style="margin-top:12px"></div>
+      </div>
+
+      <div class="detail-features" id="detailFeatures"></div>
+
+      <!-- CONTACT CARD -->
+      <div class="contact-card">
+        <h3>📞 Contact Owner</h3>
+        <div id="ownerInfo" style="margin-bottom:16px;font-size:0.9rem;color:var(--text-mid)"></div>
+        <div id="alertBox" class="alert" style="display:none;"></div>
+        <div class="form-group">
+          <label>Your Message</label>
+          <textarea id="contactMsg" rows="3" placeholder="Hi, I am interested in this property..."></textarea>
+        </div>
+        <button class="btn btn-primary" style="width:100%" onclick="sendRequest()">Send Request</button>
+        <p style="font-size:0.8rem;color:var(--text-light);margin-top:10px;text-align:center">Login required to contact owner</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script>
+  const houseId = new URLSearchParams(window.location.search).get('id');
+
+  async function loadDetails() {
+    if (!houseId) return window.location.href = 'listings.html';
+    try {
+      const house = await Houses.getById(houseId);
+      document.title = house.title + ' – HouseHunt';
+
+      document.getElementById('detailImg').src = house.image_url || 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800';
+      document.getElementById('detailPrice').textContent = formatPrice(house.price) + ' / month';
+      document.getElementById('detailTitle').textContent = house.title;
+      document.getElementById('detailLocation').textContent = `${house.location}, ${house.city}`;
+      document.getElementById('detailDesc').textContent = house.description || 'No description provided.';
+
+      document.getElementById('detailBadges').innerHTML = `
+        <span class="badge badge-type">${house.house_type}</span>
+        ${getFurnishedBadge(house.furnished)}
+        <span class="badge badge-available">${house.available ? '✅ Available' : '❌ Not Available'}</span>
+      `;
+
+      document.getElementById('detailFeatures').innerHTML = `
+        <div class="feature-item"><strong>🛏</strong> ${house.bedrooms} Bedroom(s)</div>
+        <div class="feature-item"><strong>🚿</strong> ${house.bathrooms} Bathroom(s)</div>
+        ${house.area_sqft ? `<div class="feature-item"><strong>📐</strong> ${house.area_sqft} sq.ft.</div>` : ''}
+        <div class="feature-item"><strong>🏙</strong> ${house.city}</div>
+      `;
+
+      document.getElementById('ownerInfo').innerHTML = `
+        <p><strong>Name:</strong> ${house.owner_name || 'N/A'}</p>
+        <p><strong>Phone:</strong> ${house.owner_phone || 'N/A'}</p>
+        <p><strong>Email:</strong> ${house.owner_email || 'N/A'}</p>
+      `;
+
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('content').style.display = 'block';
+    } catch (err) {
+      document.getElementById('loading').textContent = '⚠️ Property not found or backend not running.';
+    }
+  }
+
+  async function sendRequest() {
+    if (!isLoggedIn()) {
+      showAlert('alertBox', '⚠️ Please login first to contact the owner.');
+      return;
+    }
+    const user = getCurrentUser();
+    const message = document.getElementById('contactMsg').value;
+    try {
+      await Bookings.create({ user_id: user.id, house_id: houseId, message });
+      showAlert('alertBox', '✅ Request sent successfully! Owner will contact you soon.', 'success');
+    } catch (err) {
+      showAlert('alertBox', err.message || 'Failed to send request. Try again.');
+    }
+  }
+
+  loadDetails();
+</script>
+</body>
+</html>

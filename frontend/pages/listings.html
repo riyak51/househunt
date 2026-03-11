@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Browse Houses – HouseHunt</title>
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="../index.html" class="logo">🏠 House<span>Hunt</span></a>
+  <ul class="nav-links" id="navLinks">
+    <li><a href="../index.html">Home</a></li>
+    <li><a href="listings.html">Browse Houses</a></li>
+    <ul id="authLinks" style="display:contents;list-style:none;">
+      <li><a href="login.html" class="nav-btn outline">Login</a></li>
+      <li><a href="register.html" class="nav-btn">Register</a></li>
+    </ul>
+  </ul>
+</nav>
+
+<section class="section">
+  <div class="section-title">
+    <h2>Browse All Properties</h2>
+    <p id="resultCount">Loading properties...</p>
+  </div>
+
+  <div class="listings-layout">
+    <!-- FILTER SIDEBAR -->
+    <aside class="filter-card">
+      <h3>🔧 Filter Results</h3>
+      <div class="filter-group">
+        <label>City / Location</label>
+        <input type="text" id="fCity" placeholder="e.g. Pune, Mumbai">
+      </div>
+      <div class="filter-group">
+        <label>Min Price (₹)</label>
+        <input type="number" id="fMinPrice" placeholder="e.g. 5000">
+      </div>
+      <div class="filter-group">
+        <label>Max Price (₹)</label>
+        <input type="number" id="fMaxPrice" placeholder="e.g. 50000">
+      </div>
+      <div class="filter-group">
+        <label>Bedrooms</label>
+        <select id="fBeds">
+          <option value="">Any</option>
+          <option value="1">1 BHK</option>
+          <option value="2">2 BHK</option>
+          <option value="3">3 BHK</option>
+          <option value="4">4+ BHK</option>
+        </select>
+      </div>
+      <div class="filter-group">
+        <label>House Type</label>
+        <select id="fType">
+          <option value="">All Types</option>
+          <option value="Apartment">Apartment</option>
+          <option value="Villa">Villa</option>
+          <option value="Studio">Studio</option>
+          <option value="Independent House">Independent House</option>
+        </select>
+      </div>
+      <button class="btn-filter" onclick="applyFilter()">Apply Filters</button>
+      <button class="btn-reset" onclick="resetFilter()">Reset</button>
+    </aside>
+
+    <!-- HOUSE GRID -->
+    <div>
+      <div class="houses-grid" id="housesGrid">
+        <div class="loading">⏳ Loading properties...</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script src="../js/auth.js"></script>
+<script src="../js/api.js"></script>
+<script>
+  // Read URL params for pre-filled search
+  const params = new URLSearchParams(window.location.search);
+
+  async function loadHouses(queryStr = '') {
+    try {
+      const data = await Houses.getAll(queryStr ? `?${queryStr}` : '');
+      const grid = document.getElementById('housesGrid');
+
+      if (data.houses.length === 0) {
+        grid.innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>🏚 No properties found. Try different filters.</p></div>';
+        document.getElementById('resultCount').textContent = 'No results found';
+        return;
+      }
+
+      grid.innerHTML = data.houses.map(h => createHouseCard(h)).join('');
+      document.getElementById('resultCount').textContent = `Showing ${data.count} properties`;
+    } catch (err) {
+      document.getElementById('housesGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1"><p>⚠️ Backend not connected. Run your Node.js server first.</p></div>';
+      document.getElementById('resultCount').textContent = 'Error loading data';
+    }
+  }
+
+  function applyFilter() {
+    const city = document.getElementById('fCity').value;
+    const minPrice = document.getElementById('fMinPrice').value;
+    const maxPrice = document.getElementById('fMaxPrice').value;
+    const bedrooms = document.getElementById('fBeds').value;
+    const house_type = document.getElementById('fType').value;
+
+    let q = [];
+    if (city) q.push(`city=${encodeURIComponent(city)}`);
+    if (minPrice) q.push(`minPrice=${minPrice}`);
+    if (maxPrice) q.push(`maxPrice=${maxPrice}`);
+    if (bedrooms) q.push(`bedrooms=${bedrooms}`);
+    if (house_type) q.push(`house_type=${encodeURIComponent(house_type)}`);
+
+    loadHouses(q.join('&'));
+  }
+
+  function resetFilter() {
+    ['fCity','fMinPrice','fMaxPrice'].forEach(id => document.getElementById(id).value = '');
+    ['fBeds','fType'].forEach(id => document.getElementById(id).selectedIndex = 0);
+    loadHouses();
+  }
+
+  // Pre-fill from URL params and load
+  window.addEventListener('DOMContentLoaded', () => {
+    if (params.get('city')) document.getElementById('fCity').value = params.get('city');
+    if (params.get('bedrooms')) document.getElementById('fBeds').value = params.get('bedrooms');
+    if (params.get('house_type')) document.getElementById('fType').value = params.get('house_type');
+    applyFilter();
+  });
+</script>
+</body>
+</html>

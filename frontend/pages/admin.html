@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin Dashboard – HouseHunt</title>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center; padding:1rem; }
+    .modal-overlay.open { display:flex; }
+    .modal { background:#fff; border-radius:16px; padding:2rem; width:100%; max-width:560px; max-height:90vh; overflow-y:auto; }
+    .modal h3 { margin-bottom:1.5rem; font-size:1.4rem; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .tab-btns { display:flex; gap:.5rem; margin-bottom:1.5rem; background:#f0f4f8; padding:.4rem; border-radius:10px; }
+    .tab-btn { flex:1; padding:.6rem; border:none; background:transparent; border-radius:8px; cursor:pointer; font-family:'DM Sans',sans-serif; font-size:.9rem; font-weight:600; color:#8a9bb0; transition:all .2s; }
+    .tab-btn.active { background:#fff; color:#0f1b2d; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+    .tab-content { display:none; } .tab-content.active { display:block; }
+  </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar" id="sidebar">
+  <div class="logo">House<span>Hunt</span></div>
+  <nav class="sidebar-nav">
+    <a href="#" onclick="showTab('dashboard')" class="active" id="nav-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+    <a href="#" onclick="showTab('houses')"    id="nav-houses">  <i class="fas fa-home"></i> Houses</a>
+    <a href="#" onclick="showTab('users')"     id="nav-users">   <i class="fas fa-users"></i> Users</a>
+    <a href="#" onclick="showTab('bookings')"  id="nav-bookings"><i class="fas fa-calendar-check"></i> Bookings</a>
+  </nav>
+  <div style="padding:1rem 1.5rem">
+    <button class="btn btn-danger btn-sm" style="width:100%" onclick="adminLogout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="admin-main">
+  <div class="admin-header">
+    <div>
+      <h2 id="page-title">Dashboard</h2>
+      <p style="color:#8a9bb0;font-size:.9rem" id="admin-greeting"></p>
+    </div>
+    <button class="btn btn-primary btn-sm" id="add-house-btn" onclick="openAddModal()" style="display:none">
+      <i class="fas fa-plus"></i> Add House
+    </button>
+  </div>
+
+  <!-- Dashboard Tab -->
+  <div id="tab-dashboard" class="tab-content active">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="stat-icon blue"><i class="fas fa-users"></i></div><div><div class="stat-value" id="s-users">–</div><div class="stat-label">Total Users</div></div></div>
+      <div class="stat-card"><div class="stat-icon gold"><i class="fas fa-home"></i></div><div><div class="stat-value" id="s-houses">–</div><div class="stat-label">Total Houses</div></div></div>
+      <div class="stat-card"><div class="stat-icon green"><i class="fas fa-calendar-check"></i></div><div><div class="stat-value" id="s-bookings">–</div><div class="stat-label">Total Enquiries</div></div></div>
+      <div class="stat-card"><div class="stat-icon red"><i class="fas fa-clock"></i></div><div><div class="stat-value" id="s-pending">–</div><div class="stat-label">Pending</div></div></div>
+    </div>
+    <div style="background:#fff;border-radius:14px;padding:1.5rem;box-shadow:0 6px 24px rgba(15,27,45,.08)">
+      <h3 style="margin-bottom:1rem">Quick Actions</h3>
+      <div style="display:flex;gap:1rem;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="showTab('houses');openAddModal()"><i class="fas fa-plus"></i> Add New House</button>
+        <button class="btn btn-outline" onclick="showTab('bookings')"><i class="fas fa-calendar"></i> View Enquiries</button>
+        <button class="btn btn-outline" onclick="showTab('users')"><i class="fas fa-users"></i> Manage Users</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Houses Tab -->
+  <div id="tab-houses" class="tab-content">
+    <div class="table-wrapper">
+      <div class="table-header">
+        <h3>All House Listings</h3>
+        <button class="btn btn-primary btn-sm" onclick="openAddModal()"><i class="fas fa-plus"></i> Add House</button>
+      </div>
+      <div style="overflow:auto">
+        <table class="admin-table" id="houses-table">
+          <thead><tr><th>#</th><th>Image</th><th>Title</th><th>City</th><th>Price</th><th>BHK</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="houses-tbody"><tr><td colspan="8" style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Users Tab -->
+  <div id="tab-users" class="tab-content">
+    <div class="table-wrapper">
+      <div class="table-header"><h3>Registered Users</h3></div>
+      <div style="overflow:auto">
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th>Action</th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bookings Tab -->
+  <div id="tab-bookings" class="tab-content">
+    <div class="table-wrapper">
+      <div class="table-header"><h3>All Enquiries / Bookings</h3></div>
+      <div style="overflow:auto">
+        <table class="admin-table">
+          <thead><tr><th>#</th><th>User</th><th>House</th><th>City</th><th>Status</th><th>Date</th><th>Action</th></tr></thead>
+          <tbody id="bookings-tbody"><tr><td colspan="7" style="text-align:center;padding:2rem"><div class="spinner" style="margin:auto"></div></td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit House Modal -->
+<div class="modal-overlay" id="house-modal">
+  <div class="modal">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
+      <h3 id="modal-title">Add New House</h3>
+      <button onclick="closeModal()" style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:#8a9bb0">✕</button>
+    </div>
+    <input type="hidden" id="edit-id"/>
+    <div class="form-row">
+      <div class="form-group"><label>Title *</label><input id="m-title" placeholder="2BHK in Koregaon Park"/></div>
+      <div class="form-group"><label>City *</label><input id="m-city" placeholder="Pune"/></div>
+    </div>
+    <div class="form-group"><label>Location / Area *</label><input id="m-location" placeholder="Koregaon Park, Lane 5"/></div>
+    <div class="form-group"><label>Description</label><textarea id="m-desc" placeholder="Describe the property…"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Price (₹/month) *</label><input type="number" id="m-price" placeholder="15000"/></div>
+      <div class="form-group"><label>Area (sq.ft)</label><input type="number" id="m-area" placeholder="850"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Bedrooms</label><select id="m-bed"><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option></select></div>
+      <div class="form-group"><label>Bathrooms</label><select id="m-bath"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+    </div>
+    <div class="form-group"><label>Amenities (comma-separated)</label><input id="m-amenities" placeholder="WiFi, Parking, Gym, Security"/></div>
+    <div class="form-group"><label>Image URL</label><input id="m-img" placeholder="https://images.unsplash.com/…"/></div>
+    <div class="form-row">
+      <div class="form-group"><label>Owner Name</label><input id="m-oname" placeholder="Rahul Sharma"/></div>
+      <div class="form-group"><label>Owner Phone</label><input id="m-ophone" placeholder="9876543210"/></div>
+    </div>
+    <div class="form-group"><label>Owner Email</label><input id="m-oemail" placeholder="owner@example.com"/></div>
+    <div id="modal-alert"></div>
+    <div style="display:flex;gap:1rem;justify-content:flex-end;margin-top:1rem">
+      <button class="btn btn-outline" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveHouse()"><i class="fas fa-save"></i> Save House</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+// Auth guard
+const admin = JSON.parse(localStorage.getItem('hh_admin') || 'null');
+if (!admin) window.location.href = 'admin-login.html';
+document.getElementById('admin-greeting').textContent = `Welcome back, ${admin?.username || 'Admin'}`;
+
+function adminLogout() {
+  localStorage.removeItem('hh_token');
+  localStorage.removeItem('hh_admin');
+  window.location.href = 'admin-login.html';
+}
+
+// Tab switching
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.sidebar-nav a').forEach(a => a.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  document.getElementById('page-title').textContent =
+    {dashboard:'Dashboard',houses:'House Listings',users:'Registered Users',bookings:'Enquiries & Bookings'}[name];
+  document.getElementById('add-house-btn').style.display = name === 'houses' ? 'flex' : 'none';
+  if (name==='houses')  loadHouses();
+  if (name==='users')   loadUsers();
+  if (name==='bookings')loadBookings();
+}
+
+// Load stats on start
+async function loadStats() {
+  try {
+    const d = await Admin.getStats();
+    document.getElementById('s-users').textContent    = d.stats.userCount;
+    document.getElementById('s-houses').textContent   = d.stats.houseCount;
+    document.getElementById('s-bookings').textContent = d.stats.bookingCount;
+    document.getElementById('s-pending').textContent  = d.stats.pendingCount;
+  } catch(e) { console.error(e); }
+}
+
+async function loadHouses() {
+  const tbody = document.getElementById('houses-tbody');
+  try {
+    const d = await Houses.getAll();
+    if (!d.houses.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:2rem;color:#8a9bb0">No houses yet.</td></tr>'; return; }
+    tbody.innerHTML = d.houses.map((h,i) => `
+      <tr>
+        <td>${i+1}</td>
+        <td><img src="${h.image_url||'https://via.placeholder.com/60x40'}" style="width:60px;height:40px;object-fit:cover;border-radius:6px" onerror="this.src='https://via.placeholder.com/60x40'"></td>
+        <td><strong>${h.title}</strong></td>
+        <td>${h.city}</td>
+        <td>₹${Number(h.price).toLocaleString('en-IN')}</td>
+        <td>${h.bedrooms} BHK</td>
+        <td><span class="badge ${h.is_available?'badge-confirmed':'badge-cancelled'}">${h.is_available?'Available':'Unavailable'}</span></td>
+        <td>
+          <button class="btn btn-outline btn-sm" onclick="openEditModal(${h.id})" style="margin-right:.4rem"><i class="fas fa-edit"></i></button>
+          <button class="btn btn-danger btn-sm" onclick="deleteHouse(${h.id})"><i class="fas fa-trash"></i></button>
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="8" style="color:#e84040;text-align:center;padding:1rem">Failed to load houses.</td></tr>'; }
+}
+
+async function loadUsers() {
+  const tbody = document.getElementById('users-tbody');
+  try {
+    const d = await Admin.getUsers();
+    if (!d.users.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:#8a9bb0">No users yet.</td></tr>'; return; }
+    tbody.innerHTML = d.users.map((u,i) => `
+      <tr>
+        <td>${i+1}</td><td>${u.full_name}</td><td>${u.email}</td>
+        <td>${u.phone||'—'}</td>
+        <td>${new Date(u.created_at).toLocaleDateString('en-IN')}</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteUser(${u.id})"><i class="fas fa-trash"></i></button></td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="6" style="color:#e84040;text-align:center">Failed to load users.</td></tr>'; }
+}
+
+async function loadBookings() {
+  const tbody = document.getElementById('bookings-tbody');
+  try {
+    const d = await Bookings.getAll();
+    if (!d.bookings.length) { tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:#8a9bb0">No bookings yet.</td></tr>'; return; }
+    tbody.innerHTML = d.bookings.map((b,i) => `
+      <tr>
+        <td>${i+1}</td><td>${b.full_name}<br><small style="color:#8a9bb0">${b.user_email}</small></td>
+        <td>${b.house_title}</td><td>${b.city}</td>
+        <td><span class="badge badge-${b.status}">${b.status}</span></td>
+        <td>${new Date(b.booked_at).toLocaleDateString('en-IN')}</td>
+        <td>
+          <select onchange="updateStatus(${b.id},this.value)" style="padding:.3rem .5rem;border-radius:6px;border:1px solid #e2e8f0;font-size:.82rem">
+            <option value="pending"   ${b.status==='pending'   ?'selected':''}>Pending</option>
+            <option value="confirmed" ${b.status==='confirmed' ?'selected':''}>Confirm</option>
+            <option value="cancelled" ${b.status==='cancelled' ?'selected':''}>Cancel</option>
+          </select>
+        </td>
+      </tr>`).join('');
+  } catch(e) { tbody.innerHTML = '<tr><td colspan="7" style="color:#e84040;text-align:center">Failed to load bookings.</td></tr>'; }
+}
+
+// Modal
+function openAddModal() {
+  document.getElementById('modal-title').textContent = 'Add New House';
+  document.getElementById('edit-id').value = '';
+  ['m-title','m-city','m-location','m-desc','m-price','m-area','m-amenities','m-img','m-oname','m-ophone','m-oemail'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('modal-alert').innerHTML = '';
+  document.getElementById('house-modal').classList.add('open');
+}
+
+async function openEditModal(id) {
+  try {
+    const d = await Houses.getById(id);
+    const h = d.house;
+    document.getElementById('modal-title').textContent = 'Edit House';
+    document.getElementById('edit-id').value = h.id;
+    document.getElementById('m-title').value     = h.title||'';
+    document.getElementById('m-city').value      = h.city||'';
+    document.getElementById('m-location').value  = h.location||'';
+    document.getElementById('m-desc').value      = h.description||'';
+    document.getElementById('m-price').value     = h.price||'';
+    document.getElementById('m-area').value      = h.area_sqft||'';
+    document.getElementById('m-bed').value       = h.bedrooms||'1';
+    document.getElementById('m-bath').value      = h.bathrooms||'1';
+    document.getElementById('m-amenities').value = h.amenities||'';
+    document.getElementById('m-img').value       = h.image_url||'';
+    document.getElementById('m-oname').value     = h.owner_name||'';
+    document.getElementById('m-ophone').value    = h.owner_phone||'';
+    document.getElementById('m-oemail').value    = h.owner_email||'';
+    document.getElementById('modal-alert').innerHTML = '';
+    document.getElementById('house-modal').classList.add('open');
+  } catch(e) { alert('Could not load house details.'); }
+}
+
+function closeModal() { document.getElementById('house-modal').classList.remove('open'); }
+
+async function saveHouse() {
+  const editId = document.getElementById('edit-id').value;
+  const body = {
+    title: document.getElementById('m-title').value.trim(),
+    city:  document.getElementById('m-city').value.trim(),
+    location: document.getElementById('m-location').value.trim(),
+    description: document.getElementById('m-desc').value,
+    price: document.getElementById('m-price').value,
+    area_sqft: document.getElementById('m-area').value||null,
+    bedrooms:  document.getElementById('m-bed').value,
+    bathrooms: document.getElementById('m-bath').value,
+    amenities: document.getElementById('m-amenities').value,
+    image_url: document.getElementById('m-img').value,
+    owner_name:  document.getElementById('m-oname').value,
+    owner_phone: document.getElementById('m-ophone').value,
+    owner_email: document.getElementById('m-oemail').value
+  };
+  const alertBox = document.getElementById('modal-alert');
+  try {
+    if (editId) await Houses.update(editId, body);
+    else        await Houses.add(body);
+    alertBox.innerHTML = '<div class="alert alert-success">✅ Saved successfully!</div>';
+    setTimeout(() => { closeModal(); loadHouses(); loadStats(); }, 1000);
+  } catch(e) {
+    alertBox.innerHTML = `<div class="alert alert-error">${e.message}</div>`;
+  }
+}
+
+async function deleteHouse(id) {
+  if (!confirm('Delete this house listing?')) return;
+  try { await Houses.delete(id); loadHouses(); loadStats(); } catch(e) { alert(e.message); }
+}
+
+async function deleteUser(id) {
+  if (!confirm('Delete this user? This also removes their bookings.')) return;
+  try { await Admin.deleteUser(id); loadUsers(); loadStats(); } catch(e) { alert(e.message); }
+}
+
+async function updateStatus(id, status) {
+  try { await Bookings.updateStatus(id, status); } catch(e) { alert(e.message); }
+}
+
+// Init
+loadStats();
+</script>
+</body>
+</html>
