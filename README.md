@@ -303,8 +303,7 @@ const BASE_URL = 'https://your-render-url.onrender.com/api';
 
 ---
 
-*Built for BTech IT Project — HouseHunt Smart House Suggestion System*
-=======
+
 # househunt
 HouseHunt - Smart House Suggestion System 
 
